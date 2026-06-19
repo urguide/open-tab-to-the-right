@@ -36,5 +36,5 @@ never sent anywhere.
 
 ## Contact
 
-If you have any questions about this privacy policy, please open an issue on
-the project's repository.
+If you have any questions about this privacy policy, please open an issue at
+https://github.com/urguide/open-tab-to-the-right/issues.

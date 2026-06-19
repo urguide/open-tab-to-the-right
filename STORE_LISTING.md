@@ -89,4 +89,8 @@ focusing the left tab when the active tab is closed.
 
 ## Privacy policy URL
 
-Host PRIVACY.md publicly (e.g. on GitHub) and paste its URL here.
+https://github.com/urguide/open-tab-to-the-right/blob/main/PRIVACY.md
+
+## Homepage / repository URL
+
+https://github.com/urguide/open-tab-to-the-right
