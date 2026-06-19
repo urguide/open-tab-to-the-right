@@ -1,0 +1,29 @@
+{
+  "extName": {
+    "message": "在右側開啟分頁"
+  },
+  "extDescription": {
+    "message": "1) 新分頁一律開在目前分頁的右邊。2) 關閉目前分頁時，焦點移到左邊的分頁（可開關）。"
+  },
+  "actionTitle": {
+    "message": "在右側開啟分頁 - 設定"
+  },
+  "popupTitle": {
+    "message": "在右側開啟分頁"
+  },
+  "feature1Heading": {
+    "message": "1. 新分頁開在右邊"
+  },
+  "feature1Desc": {
+    "message": "新分頁一律開在目前分頁的右邊。"
+  },
+  "alwaysOn": {
+    "message": "永遠啟用"
+  },
+  "feature2Heading": {
+    "message": "2. 關閉後焦點往左"
+  },
+  "feature2Desc": {
+    "message": "關閉目前分頁時，焦點移到左邊的分頁。"
+  }
+}

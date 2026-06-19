@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        width: 280px;
+        margin: 0;
+        padding: 14px 16px;
+        color: #1f1f1f;
+      }
+      h1 {
+        font-size: 14px;
+        margin: 0 0 12px;
+      }
+      .feature {
+        font-size: 13px;
+        line-height: 1.4;
+        margin-bottom: 14px;
+        color: #444;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .row label {
+        font-size: 13px;
+        flex: 1;
+      }
+      .note {
+        font-size: 11px;
+        color: #888;
+        margin-top: 2px;
+      }
+      .always-on {
+        font-size: 11px;
+        color: #2e7d32;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 data-i18n="popupTitle"></h1>
+
+    <div class="feature">
+      <strong data-i18n="feature1Heading"></strong><br />
+      <span data-i18n="feature1Desc"></span>
+      <div class="always-on" data-i18n="alwaysOn"></div>
+    </div>
+
+    <div class="feature">
+      <div class="row">
+        <label for="focusLeftOnClose">
+          <strong data-i18n="feature2Heading"></strong><br />
+          <span data-i18n="feature2Desc"></span>
+        </label>
+        <input type="checkbox" id="focusLeftOnClose" />
+      </div>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

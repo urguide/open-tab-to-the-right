@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800">
+  <rect width="1280" height="800" fill="#eef2ff"/>
+
+  <!-- headline -->
+  <text x="640" y="120" text-anchor="middle" font-family="system-ui, sans-serif" font-size="56" font-weight="700" fill="#1e293b">Open Tab to the Right</text>
+  <text x="640" y="172" text-anchor="middle" font-family="system-ui, sans-serif" font-size="28" fill="#475569">New tabs open right next to your current tab</text>
+
+  <!-- browser window mockup -->
+  <rect x="180" y="240" width="920" height="420" rx="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+
+  <!-- tab strip -->
+  <rect x="180" y="240" width="920" height="64" rx="16" fill="#f1f5f9"/>
+  <rect x="180" y="288" width="920" height="16" fill="#f1f5f9"/>
+
+  <!-- existing tabs -->
+  <rect x="200" y="252" width="180" height="44" rx="8" fill="#e2e8f0"/>
+  <text x="222" y="280" font-family="system-ui, sans-serif" font-size="18" fill="#475569">Docs</text>
+
+  <rect x="392" y="252" width="180" height="44" rx="8" fill="#ffffff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="414" y="280" font-family="system-ui, sans-serif" font-size="18" font-weight="600" fill="#1e293b">Current</text>
+
+  <!-- NEW tab placed to the right -->
+  <rect x="584" y="252" width="180" height="44" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="606" y="280" font-family="system-ui, sans-serif" font-size="18" font-weight="600" fill="#2563eb">New tab</text>
+
+  <rect x="776" y="252" width="180" height="44" rx="8" fill="#e2e8f0"/>
+  <text x="798" y="280" font-family="system-ui, sans-serif" font-size="18" fill="#475569">Mail</text>
+
+  <!-- arrow showing insertion -->
+  <path d="M572 340 q0 -20 20 -20 h120" fill="none" stroke="#2563eb" stroke-width="4" stroke-dasharray="8 6"/>
+  <text x="640" y="392" text-anchor="middle" font-family="system-ui, sans-serif" font-size="22" fill="#2563eb" font-weight="600">inserted here, not at the far end</text>
+
+  <!-- page content placeholder -->
+  <rect x="220" y="440" width="500" height="20" rx="6" fill="#e2e8f0"/>
+  <rect x="220" y="478" width="640" height="20" rx="6" fill="#eef2ff"/>
+  <rect x="220" y="516" width="420" height="20" rx="6" fill="#eef2ff"/>
+  <rect x="220" y="554" width="560" height="20" rx="6" fill="#eef2ff"/>
+
+  <text x="640" y="730" text-anchor="middle" font-family="system-ui, sans-serif" font-size="24" fill="#64748b">Private . No tracking . Open source</text>
+</svg>

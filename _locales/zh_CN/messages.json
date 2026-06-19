@@ -1,0 +1,29 @@
+{
+  "extName": {
+    "message": "在右侧打开标签页"
+  },
+  "extDescription": {
+    "message": "1) 新标签页始终在当前标签页的右边打开。2) 关闭当前标签页时，焦点移到左边的标签页（可开关）。"
+  },
+  "actionTitle": {
+    "message": "在右侧打开标签页 - 设置"
+  },
+  "popupTitle": {
+    "message": "在右侧打开标签页"
+  },
+  "feature1Heading": {
+    "message": "1. 新标签页在右边打开"
+  },
+  "feature1Desc": {
+    "message": "新标签页始终在当前标签页的右边打开。"
+  },
+  "alwaysOn": {
+    "message": "始终启用"
+  },
+  "feature2Heading": {
+    "message": "2. 关闭后焦点向左"
+  },
+  "feature2Desc": {
+    "message": "关闭当前标签页时，焦点移到左边的标签页。"
+  }
+}

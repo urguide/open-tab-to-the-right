@@ -1,0 +1,29 @@
+{
+  "extName": {
+    "message": "Open Tab to the Right"
+  },
+  "extDescription": {
+    "message": "1) Always open new tabs to the right of the current tab. 2) When closing the active tab, focus the tab on its left (toggleable)."
+  },
+  "actionTitle": {
+    "message": "Open Tab to the Right - Settings"
+  },
+  "popupTitle": {
+    "message": "Open Tab to the Right"
+  },
+  "feature1Heading": {
+    "message": "1. New tab on the right"
+  },
+  "feature1Desc": {
+    "message": "New tabs always open to the right of the current tab."
+  },
+  "alwaysOn": {
+    "message": "Always on"
+  },
+  "feature2Heading": {
+    "message": "2. Focus left on close"
+  },
+  "feature2Desc": {
+    "message": "When you close the active tab, focus moves to the tab on its left."
+  }
+}

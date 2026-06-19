@@ -1,0 +1,29 @@
+{
+  "extName": {
+    "message": "右側にタブを開く"
+  },
+  "extDescription": {
+    "message": "1) 新しいタブを常に現在のタブの右側に開きます。2) アクティブなタブを閉じたとき、左側のタブにフォーカスを移します（切り替え可能）。"
+  },
+  "actionTitle": {
+    "message": "右側にタブを開く - 設定"
+  },
+  "popupTitle": {
+    "message": "右側にタブを開く"
+  },
+  "feature1Heading": {
+    "message": "1. 新しいタブを右側に"
+  },
+  "feature1Desc": {
+    "message": "新しいタブは常に現在のタブの右側に開きます。"
+  },
+  "alwaysOn": {
+    "message": "常に有効"
+  },
+  "feature2Heading": {
+    "message": "2. 閉じたら左にフォーカス"
+  },
+  "feature2Desc": {
+    "message": "アクティブなタブを閉じると、左側のタブにフォーカスが移ります。"
+  }
+}

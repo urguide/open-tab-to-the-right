@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800">
+  <rect width="1280" height="800" fill="#eef2ff"/>
+
+  <text x="640" y="120" text-anchor="middle" font-family="system-ui, sans-serif" font-size="56" font-weight="700" fill="#1e293b">Focus the left tab on close</text>
+  <text x="640" y="172" text-anchor="middle" font-family="system-ui, sans-serif" font-size="28" fill="#475569">Close a tab and stay on the left - toggle it anytime</text>
+
+  <!-- before -->
+  <text x="370" y="250" text-anchor="middle" font-family="system-ui, sans-serif" font-size="24" font-weight="600" fill="#64748b">Close the active tab...</text>
+  <rect x="120" y="280" width="500" height="56" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="132" y="290" width="140" height="36" rx="6" fill="#e2e8f0"/>
+  <rect x="284" y="290" width="140" height="36" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="354" y="314" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#2563eb" font-weight="600">active X</text>
+  <rect x="436" y="290" width="140" height="36" rx="6" fill="#e2e8f0"/>
+
+  <!-- after -->
+  <text x="910" y="250" text-anchor="middle" font-family="system-ui, sans-serif" font-size="24" font-weight="600" fill="#64748b">...focus moves LEFT</text>
+  <rect x="660" y="280" width="500" height="56" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="672" y="290" width="140" height="36" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="742" y="314" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#2563eb" font-weight="600">now active</text>
+  <rect x="824" y="290" width="140" height="36" rx="6" fill="#e2e8f0"/>
+
+  <!-- popup mockup -->
+  <rect x="440" y="420" width="400" height="280" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="470" y="468" font-family="system-ui, sans-serif" font-size="22" font-weight="700" fill="#1e293b">Open Tab to the Right</text>
+
+  <text x="470" y="520" font-family="system-ui, sans-serif" font-size="17" font-weight="600" fill="#334155">1. New tab on the right</text>
+  <rect x="470" y="534" width="120" height="26" rx="13" fill="#dcfce7"/>
+  <text x="530" y="552" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" fill="#16a34a">Always on</text>
+
+  <text x="470" y="610" font-family="system-ui, sans-serif" font-size="17" font-weight="600" fill="#334155">2. Focus left on close</text>
+  <rect x="760" y="592" width="50" height="28" rx="14" fill="#2563eb"/>
+  <circle cx="796" cy="606" r="11" fill="#ffffff"/>
+
+  <text x="640" y="760" text-anchor="middle" font-family="system-ui, sans-serif" font-size="22" fill="#64748b">Toggle on or off from the toolbar popup</text>
+</svg>
