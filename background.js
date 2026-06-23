@@ -11,7 +11,12 @@
 const DEFAULT_SETTINGS = { focusLeftOnClose: true };
 const SESSION_INITIALIZED_KEY = "sessionInitialized";
 const RESTORE_SUPPRESSION_UNTIL_KEY = "restoreSuppressionUntil";
-const RESTORE_SUPPRESSION_MS = 1500;
+const RESTORE_SUPPRESSION_MS = 3000;
+
+// Resolves once init() has run for the current worker lifetime. onCreated awaits
+// this so a restored tab created while the worker is still starting up can never
+// be repositioned before the restore-suppression window has been written.
+let initPromise;
 
 async function getSettings() {
   return chrome.storage.sync.get(DEFAULT_SETTINGS);
@@ -151,6 +156,12 @@ chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
 
 // When a new tab is created, move it to the right of the active tab.
 chrome.tabs.onCreated.addListener(async (tab) => {
+  // Wait for startup initialisation to finish so the restore-suppression window
+  // is guaranteed to be in place before we decide whether to move this tab. The
+  // worker can be woken by a restored tab's onCreated before init() has written
+  // the suppression flag; without this await that tab would be repositioned.
+  await initPromise?.catch(() => {});
+
   // Chrome rebuilds the previous session by firing onCreated for restored tabs.
   // Moving those tabs during startup corrupts the order Chrome is restoring.
   if (await shouldSuppressCreatedMove()) {
@@ -210,6 +221,10 @@ async function init() {
   await chrome.storage.session.set({ [SESSION_INITIALIZED_KEY]: true });
 }
 
-chrome.runtime.onStartup.addListener(init);
-chrome.runtime.onInstalled.addListener(init);
-init();
+chrome.runtime.onStartup.addListener(() => {
+  initPromise = init();
+});
+chrome.runtime.onInstalled.addListener(() => {
+  initPromise = init();
+});
+initPromise = init();
