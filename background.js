@@ -9,6 +9,9 @@
 
 // Default settings. focusLeftOnClose can be disabled by the user via the popup.
 const DEFAULT_SETTINGS = { focusLeftOnClose: true };
+const SESSION_INITIALIZED_KEY = "sessionInitialized";
+const RESTORE_SUPPRESSION_UNTIL_KEY = "restoreSuppressionUntil";
+const RESTORE_SUPPRESSION_MS = 1500;
 
 async function getSettings() {
   return chrome.storage.sync.get(DEFAULT_SETTINGS);
@@ -27,6 +30,28 @@ async function getActive(windowId) {
 
 async function setActive(windowId, id, index) {
   await chrome.storage.session.set({ [keyFor(windowId)]: { id, index } });
+}
+
+async function extendRestoreSuppression() {
+  await chrome.storage.session.set({
+    [RESTORE_SUPPRESSION_UNTIL_KEY]: Date.now() + RESTORE_SUPPRESSION_MS,
+  });
+}
+
+async function shouldSuppressCreatedMove() {
+  const res = await chrome.storage.session.get(RESTORE_SUPPRESSION_UNTIL_KEY);
+  const until = res[RESTORE_SUPPRESSION_UNTIL_KEY];
+  if (typeof until !== "number") {
+    return false;
+  }
+
+  if (Date.now() <= until) {
+    await extendRestoreSuppression();
+    return true;
+  }
+
+  await chrome.storage.session.remove(RESTORE_SUPPRESSION_UNTIL_KEY);
+  return false;
 }
 
 async function rememberActive(windowId, tabId) {
@@ -126,6 +151,12 @@ chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
 
 // When a new tab is created, move it to the right of the active tab.
 chrome.tabs.onCreated.addListener(async (tab) => {
+  // Chrome rebuilds the previous session by firing onCreated for restored tabs.
+  // Moving those tabs during startup corrupts the order Chrome is restoring.
+  if (await shouldSuppressCreatedMove()) {
+    return;
+  }
+
   // Tabs opened via "open in new tab" usually set openerTabId; we still
   // reposition all newly created tabs so behaviour is consistent.
   const windowId = tab.windowId;
@@ -166,10 +197,17 @@ chrome.tabs.onCreated.addListener(async (tab) => {
 
 // Initialise the active-tab records on startup/install.
 async function init() {
+  const res = await chrome.storage.session.get(SESSION_INITIALIZED_KEY);
+  if (!res[SESSION_INITIALIZED_KEY]) {
+    await extendRestoreSuppression();
+  }
+
   const tabs = await chrome.tabs.query({ active: true });
   for (const tab of tabs) {
     await setActive(tab.windowId, tab.id, tab.index);
   }
+
+  await chrome.storage.session.set({ [SESSION_INITIALIZED_KEY]: true });
 }
 
 chrome.runtime.onStartup.addListener(init);
