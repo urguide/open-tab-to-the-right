@@ -7,8 +7,9 @@
 // last-used tab). session storage survives suspension and is cleared when the
 // browser closes.
 
-// Default settings. focusLeftOnClose can be disabled by the user via the popup.
-const DEFAULT_SETTINGS = { focusLeftOnClose: true };
+// Default settings. focusLeftOnClose is off by default; the user can enable it
+// via the popup.
+const DEFAULT_SETTINGS = { focusLeftOnClose: false };
 const SESSION_INITIALIZED_KEY = "sessionInitialized";
 const RESTORE_SUPPRESSION_UNTIL_KEY = "restoreSuppressionUntil";
 const RESTORE_SUPPRESSION_MS = 3000;

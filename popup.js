@@ -6,7 +6,7 @@ for (const el of document.querySelectorAll("[data-i18n]")) {
   }
 }
 
-const DEFAULT_SETTINGS = { focusLeftOnClose: true };
+const DEFAULT_SETTINGS = { focusLeftOnClose: false };
 const checkbox = document.getElementById("focusLeftOnClose");
 
 // Load the saved setting and reflect it in the checkbox.
