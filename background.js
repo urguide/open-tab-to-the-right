@@ -1,31 +1,78 @@
-// Track the active tab index per window so we know where "to the right" is.
-const activeTabIndex = new Map();
+// Track, per window, which tab is active and what index it sits at, so we know
+// where "to the left" is when a tab is closed.
+//
+// State is kept in chrome.storage.session rather than in-memory variables: an
+// MV3 service worker is suspended when idle, which would wipe in-memory state
+// and make tab-close focusing fall back to Chrome's default (jumping to the
+// last-used tab). session storage survives suspension and is cleared when the
+// browser closes.
 
 // Default settings. focusLeftOnClose can be disabled by the user via the popup.
 const DEFAULT_SETTINGS = { focusLeftOnClose: true };
 
 async function getSettings() {
-  const stored = await chrome.storage.sync.get(DEFAULT_SETTINGS);
-  return stored;
+  return chrome.storage.sync.get(DEFAULT_SETTINGS);
 }
 
-// Track the currently active tab id per window so we can tell, on close,
-// whether the closed tab was the focused one.
-const activeTabId = new Map();
+// One session-storage key per window, holding { id, index } of its active tab.
+function keyFor(windowId) {
+  return `active_${windowId}`;
+}
+
+async function getActive(windowId) {
+  const key = keyFor(windowId);
+  const res = await chrome.storage.session.get(key);
+  return res[key];
+}
+
+async function setActive(windowId, id, index) {
+  await chrome.storage.session.set({ [keyFor(windowId)]: { id, index } });
+}
 
 async function rememberActive(windowId, tabId) {
   try {
     const tab = await chrome.tabs.get(tabId);
-    activeTabIndex.set(windowId, tab.index);
-    activeTabId.set(windowId, tabId);
+    await setActive(windowId, tab.id, tab.index);
   } catch (e) {
     // Tab may have been closed already; ignore.
+  }
+}
+
+// Re-read the active tab's current index from Chrome and persist it. Called
+// after events that can shift the active tab's index (a move, or a background
+// tab closing to its left) so the stored index stays accurate for the moment
+// the active tab itself is eventually closed.
+async function refreshActiveIndex(windowId) {
+  const active = await getActive(windowId);
+  if (!active) {
+    return;
+  }
+  try {
+    const tab = await chrome.tabs.get(active.id);
+    if (tab.windowId === windowId) {
+      await setActive(windowId, tab.id, tab.index);
+    }
+  } catch (e) {
+    // Active tab is gone; the onRemoved handler will deal with it.
   }
 }
 
 // Keep track of which tab is active in each window.
 chrome.tabs.onActivated.addListener(({ tabId, windowId }) => {
   rememberActive(windowId, tabId);
+});
+
+// Reordering a tab can change the active tab's index; keep our record fresh.
+chrome.tabs.onMoved.addListener((tabId, { windowId }) => {
+  refreshActiveIndex(windowId);
+});
+
+// Moving a tab between windows likewise shifts indices on both sides.
+chrome.tabs.onAttached.addListener((tabId, { newWindowId }) => {
+  refreshActiveIndex(newWindowId);
+});
+chrome.tabs.onDetached.addListener((tabId, { oldWindowId }) => {
+  refreshActiveIndex(oldWindowId);
 });
 
 // When a tab is closed, if it was the active one, focus the tab to its left.
@@ -35,16 +82,24 @@ chrome.tabs.onRemoved.addListener(async (tabId, removeInfo) => {
     return; // The whole window is going away; nothing to refocus.
   }
 
-  const wasActive = activeTabId.get(windowId) === tabId;
-  const closedIndex = activeTabIndex.get(windowId);
-
-  // Clean up our records for the closed tab.
-  if (wasActive) {
-    activeTabId.delete(windowId);
+  const active = await getActive(windowId);
+  if (!active) {
+    return; // Unknown active tab; let Chrome decide.
   }
 
-  if (!wasActive || typeof closedIndex !== "number") {
-    return; // A background tab was closed; Chrome keeps focus as-is.
+  if (active.id !== tabId) {
+    // A background tab closed. If it sat to the left of the active tab, the
+    // active tab's index has shifted down by one; re-sync our record.
+    await refreshActiveIndex(windowId);
+    return; // Chrome keeps focus on the still-active tab.
+  }
+
+  // The active tab was closed. Clear our record for it.
+  await chrome.storage.session.remove(keyFor(windowId));
+
+  const closedIndex = active.index;
+  if (typeof closedIndex !== "number") {
+    return;
   }
 
   // Respect the user's setting for this feature.
@@ -83,10 +138,12 @@ chrome.tabs.onCreated.addListener(async (tab) => {
       const opener = await chrome.tabs.get(tab.openerTabId);
       referenceIndex = opener.index;
     } catch (e) {
-      referenceIndex = activeTabIndex.get(windowId);
+      const active = await getActive(windowId);
+      referenceIndex = active && active.index;
     }
   } else {
-    referenceIndex = activeTabIndex.get(windowId);
+    const active = await getActive(windowId);
+    referenceIndex = active && active.index;
   }
 
   if (typeof referenceIndex !== "number") {
@@ -107,12 +164,11 @@ chrome.tabs.onCreated.addListener(async (tab) => {
   }
 });
 
-// Initialise the active-tab map on startup/install.
+// Initialise the active-tab records on startup/install.
 async function init() {
   const tabs = await chrome.tabs.query({ active: true });
   for (const tab of tabs) {
-    activeTabIndex.set(tab.windowId, tab.index);
-    activeTabId.set(tab.windowId, tab.id);
+    await setActive(tab.windowId, tab.id, tab.index);
   }
 }
 
