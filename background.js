@@ -11,8 +11,18 @@
 // via the popup.
 const DEFAULT_SETTINGS = { focusLeftOnClose: false };
 const SESSION_INITIALIZED_KEY = "sessionInitialized";
-const RESTORE_SUPPRESSION_UNTIL_KEY = "restoreSuppressionUntil";
-const RESTORE_SUPPRESSION_MS = 3000;
+const STARTUP_MODE_UNTIL_KEY = "startupModeUntil";
+// During browser startup Chrome replays the previous session by firing
+// onCreated for every restored tab. While in "startup mode" we move no tabs at
+// all, so a restored tab is never dragged out of the order Chrome is rebuilding.
+//
+// We can't use setTimeout to detect "restore finished": an MV3 service worker is
+// suspended when idle, which would kill the timer. Instead each restored tab
+// pushes a deadline to now + STARTUP_QUIET_MS; once a gap of that length passes
+// with no new tab, the next onCreated sees the deadline expired and treats
+// startup as over. A tab created with an openerTabId (an explicit user action,
+// e.g. opening a link in a new tab) ends startup mode immediately.
+const STARTUP_QUIET_MS = 1200;
 
 // Resolves once init() has run for the current worker lifetime. onCreated awaits
 // this so a restored tab created while the worker is still starting up can never
@@ -38,25 +48,36 @@ async function setActive(windowId, id, index) {
   await chrome.storage.session.set({ [keyFor(windowId)]: { id, index } });
 }
 
-async function extendRestoreSuppression() {
+// Enter (or extend) startup mode: while active, onCreated moves no tabs.
+async function armStartupMode() {
   await chrome.storage.session.set({
-    [RESTORE_SUPPRESSION_UNTIL_KEY]: Date.now() + RESTORE_SUPPRESSION_MS,
+    [STARTUP_MODE_UNTIL_KEY]: Date.now() + STARTUP_QUIET_MS,
   });
 }
 
-async function shouldSuppressCreatedMove() {
-  const res = await chrome.storage.session.get(RESTORE_SUPPRESSION_UNTIL_KEY);
-  const until = res[RESTORE_SUPPRESSION_UNTIL_KEY];
+// Leave startup mode immediately.
+async function endStartupMode() {
+  await chrome.storage.session.remove(STARTUP_MODE_UNTIL_KEY);
+}
+
+// True while the browser still appears to be replaying its restored session.
+// Each call within the quiet window pushes the deadline out, so a slow restore
+// (many tabs) stays suppressed for as long as tabs keep arriving. Once a gap of
+// STARTUP_QUIET_MS passes with no new tab, this returns false and clears the
+// flag — startup is considered over.
+async function isInStartupMode() {
+  const res = await chrome.storage.session.get(STARTUP_MODE_UNTIL_KEY);
+  const until = res[STARTUP_MODE_UNTIL_KEY];
   if (typeof until !== "number") {
     return false;
   }
 
   if (Date.now() <= until) {
-    await extendRestoreSuppression();
+    await armStartupMode();
     return true;
   }
 
-  await chrome.storage.session.remove(RESTORE_SUPPRESSION_UNTIL_KEY);
+  await endStartupMode();
   return false;
 }
 
@@ -164,13 +185,19 @@ chrome.tabs.onCreated.addListener(async (tab) => {
   await initPromise?.catch(() => {});
 
   // Chrome rebuilds the previous session by firing onCreated for restored tabs.
-  // Moving those tabs during startup corrupts the order Chrome is restoring.
-  if (await shouldSuppressCreatedMove()) {
-    return;
+  // While in startup mode we move nothing so that order is left untouched.
+  const inStartup = await isInStartupMode();
+  if (tab.openerTabId != null) {
+    // A tab opened from a link/JS carries an opener — an explicit user action,
+    // never a session-restore tab. Treat it as the end of startup and reposition
+    // it normally.
+    if (inStartup) {
+      await endStartupMode();
+    }
+  } else if (inStartup) {
+    return; // A restored tab (or the very first new tab during restore); leave it.
   }
 
-  // Tabs opened via "open in new tab" usually set openerTabId; we still
-  // reposition all newly created tabs so behaviour is consistent.
   const windowId = tab.windowId;
 
   // Determine the reference index: the opener tab if present, otherwise the
@@ -208,22 +235,39 @@ chrome.tabs.onCreated.addListener(async (tab) => {
 });
 
 // Initialise the active-tab records on startup/install.
+//
+// session storage is empty whenever the browser has just started (it is cleared
+// when the browser closes). That is exactly when Chrome replays the previous
+// session by firing onCreated for every restored tab, so the *first* run of a
+// worker lifetime must enter startup mode BEFORE it records any active-tab
+// reference. Otherwise an onCreated for a restored tab could read the freshly
+// written reference and move the tab to the right of it, dragging one tab to the
+// front of the bar on every launch.
 async function init() {
   const res = await chrome.storage.session.get(SESSION_INITIALIZED_KEY);
-  if (!res[SESSION_INITIALIZED_KEY]) {
-    await extendRestoreSuppression();
+  const firstRunThisSession = !res[SESSION_INITIALIZED_KEY];
+
+  if (firstRunThisSession) {
+    // Enter startup mode first and mark the session initialised, so any onCreated
+    // already waiting on initPromise sees startup mode as soon as it resumes —
+    // before we populate the active-tab references below.
+    await armStartupMode();
+    await chrome.storage.session.set({ [SESSION_INITIALIZED_KEY]: true });
   }
 
   const tabs = await chrome.tabs.query({ active: true });
   for (const tab of tabs) {
     await setActive(tab.windowId, tab.id, tab.index);
   }
-
-  await chrome.storage.session.set({ [SESSION_INITIALIZED_KEY]: true });
 }
 
 chrome.runtime.onStartup.addListener(() => {
-  initPromise = init();
+  // A real browser launch: guarantee startup mode is armed even if session
+  // storage somehow survived, since onStartup only fires on a genuine restore.
+  initPromise = (async () => {
+    await armStartupMode();
+    await init();
+  })();
 });
 chrome.runtime.onInstalled.addListener(() => {
   initPromise = init();
