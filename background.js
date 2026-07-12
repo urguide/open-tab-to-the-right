@@ -33,6 +33,14 @@ async function getSettings() {
   return chrome.storage.sync.get(DEFAULT_SETTINGS);
 }
 
+// True if this tab was created by session restore rather than a user action.
+// Restored tabs are created lazily: they arrive discarded/unloaded and only
+// load when clicked. Tabs from user actions (Ctrl+T, links, bookmarks) are
+// created loading immediately, so they never match.
+function isRestoredTab(tab) {
+  return tab.discarded === true || tab.status === "unloaded";
+}
+
 // One session-storage key per window, holding { id, index } of its active tab.
 function keyFor(windowId) {
   return `active_${windowId}`;
@@ -185,9 +193,19 @@ chrome.tabs.onCreated.addListener(async (tab) => {
   await initPromise?.catch(() => {});
 
   // Chrome rebuilds the previous session by firing onCreated for restored tabs.
-  // While in startup mode we move nothing so that order is left untouched.
+  // Restored tabs are created discarded/unloaded, unlike any tab a user action
+  // creates (Ctrl+T, links, bookmarks), so we can skip them outright. This
+  // property-based check is what actually protects session restore; the timing
+  // heuristic below is only a best-effort extra guard.
+  if (isRestoredTab(tab)) {
+    return;
+  }
+
+  // While in startup mode we additionally move nothing at all, so even a
+  // restored tab that slipped past the check above keeps its position.
+  const hasOpener = tab.openerTabId != null;
   const inStartup = await isInStartupMode();
-  if (tab.openerTabId != null) {
+  if (hasOpener) {
     // A tab opened from a link/JS carries an opener — an explicit user action,
     // never a session-restore tab. Treat it as the end of startup and reposition
     // it normally.
