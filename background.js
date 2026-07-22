@@ -218,20 +218,25 @@ chrome.tabs.onCreated.addListener(async (tab) => {
 
   const windowId = tab.windowId;
 
-  // Determine the reference index: the opener tab if present, otherwise the
-  // last known active tab in this window.
+  // Determine the reference tab: the opener tab if present, otherwise the last
+  // known active tab in this window. We keep both its index (where to move to)
+  // and its id (so we can park focus on it while moving, see below).
   let referenceIndex;
+  let referenceId;
   if (typeof tab.openerTabId === "number") {
     try {
       const opener = await chrome.tabs.get(tab.openerTabId);
       referenceIndex = opener.index;
+      referenceId = opener.id;
     } catch (e) {
       const active = await getActive(windowId);
       referenceIndex = active && active.index;
+      referenceId = active && active.id;
     }
   } else {
     const active = await getActive(windowId);
     referenceIndex = active && active.index;
+    referenceId = active && active.id;
   }
 
   if (typeof referenceIndex !== "number") {
@@ -246,10 +251,21 @@ chrome.tabs.onCreated.addListener(async (tab) => {
   }
 
   try {
+    // A foreground-opened tab (e.g. Alt+Enter) is active the instant it is
+    // created. Moving an *active* tab makes Chrome scroll the tab strip to keep
+    // it visible, which in a crowded window drags the new tab to the visible
+    // left edge and pushes earlier tabs out of view.
+    //
+    // To avoid that, park focus back on the reference tab first so the new tab
+    // moves while it is a *background* tab (no scroll-to-follow), then re-focus
+    // it once it is sitting just right of the reference tab — now within view,
+    // so Chrome only needs a minimal scroll.
+    const wasActive = tab.active;
+    if (wasActive && typeof referenceId === "number") {
+      await chrome.tabs.update(referenceId, { active: true });
+    }
     await chrome.tabs.move(tab.id, { index: targetIndex });
-    // Moving an active tab can make Chrome shift focus (e.g. to the last-used
-    // tab), so re-assert focus on a foreground-opened tab after the move.
-    if (tab.active) {
+    if (wasActive) {
       await chrome.tabs.update(tab.id, { active: true });
     }
   } catch (e) {
