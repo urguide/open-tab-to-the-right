@@ -247,6 +247,11 @@ chrome.tabs.onCreated.addListener(async (tab) => {
 
   try {
     await chrome.tabs.move(tab.id, { index: targetIndex });
+    // Moving an active tab can make Chrome shift focus (e.g. to the last-used
+    // tab), so re-assert focus on a foreground-opened tab after the move.
+    if (tab.active) {
+      await chrome.tabs.update(tab.id, { active: true });
+    }
   } catch (e) {
     // Moving can fail for pinned tabs or race conditions; ignore.
   }
